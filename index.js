@@ -2,6 +2,7 @@ var MigrationProvider = require('./migration-provider');
 var createMigrationCommand = require('./commands/create-migration-command');
 var runMigrationsCommand = require('./commands/run-migrations-command');
 var rollbackMigrationCommand = require('./commands/rollback-migration-command');
+let listPendingCommand = require('./commands/list-pending-command');
 
 var LOGGER = console;
 
@@ -33,6 +34,18 @@ function create(config, name) {
     createMigrationCommand(config, LOGGER, name);
 }
 
+async function ls(config, adapter) {
+    const migrationProvider = MigrationProvider(config);
+    try {
+        await listPendingCommand(migrationProvider, adapter, config.minMigrationTime, LOGGER);
+    } catch (e) {
+        adapter.dispose();
+        throw e;
+    }
+
+    adapter.dispose();
+}
+
 module.exports = {
     setLogger: function (logger) {
         LOGGER = logger;
@@ -40,6 +53,7 @@ module.exports = {
     migrate: migrate,
     rollback: rollback,
     create: create,
+    ls: ls,
     run: function (config, command, param) {
         config.adapter = config.adapter || 'pg';
 
@@ -54,13 +68,17 @@ module.exports = {
 
         switch (command) {
             case 'create':
-                create(config, param);
+                create(config, param).then(onCliSuccess, onCliError);
                 break;
             case 'migrate':
                 migrate(config, adapter).then(onCliSuccess, onCliError);
                 break;
             case 'rollback':
                 rollback(config, adapter).then(onCliSuccess, onCliError);
+                break;
+            case 'pending':
+            case 'ls':
+                ls(config, adapter).then(onCliSuccess, onCliError);
                 break;
             default:
                 LOGGER.log(`unknown command: ${command}`);

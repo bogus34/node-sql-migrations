@@ -18,6 +18,19 @@ module.exports = function (config) {
                 sql = sql.replace(new RegExp(escapeRegExp(key), "g"), config.parameters[key]);
             });
             return sql;
+        },
+
+        getPending: async function(adapter, minMigrationTime) {
+            const appliedMigrationIds = await adapter.appliedMigrations();
+            const migrationsList = this.getMigrationsList();
+            return migrationsList.filter((migration) => {
+                var id = migration.match(/^(\d+)/)[0];
+                if ((!minMigrationTime || id >= minMigrationTime) && !~appliedMigrationIds.indexOf(id) && migration.match(/^\d+\_up.*$/)) {
+                    return true
+                };
+
+                return false;
+            });
         }
     };
 };
