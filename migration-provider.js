@@ -24,9 +24,9 @@ module.exports = function (config) {
             const appliedMigrationIds = await adapter.appliedMigrations();
             const migrationsList = this.getMigrationsList();
             return migrationsList.filter((migration) => {
-                var id = migration.match(/^(\d+)/)[0];
-                if ((!minMigrationTime || id >= minMigrationTime) && !~appliedMigrationIds.indexOf(id) && migration.match(/^\d+\_up.*$/)) {
-                    return true
+                var id = Number(migration.match(/^(\d+)/)[0]);
+                if (!isNaN(id) && (!minMigrationTime || id >= minMigrationTime) && !~appliedMigrationIds.indexOf(id) && migration.match(/^\d+\_up.*$/)) {
+                    return true;
                 };
 
                 return false;
