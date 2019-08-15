@@ -29,23 +29,32 @@ function rollback(config, adapter) {
     });
 }
 
+function create(config, name) {
+    createMigrationCommand(config, LOGGER, name);
+}
+
 module.exports = {
     setLogger: function (logger) {
         LOGGER = logger;
     },
     migrate: migrate,
     rollback: rollback,
-    run: function (config) {
+    create: create,
+    run: function (config, command, param) {
         config.adapter = config.adapter || 'pg';
 
         var Adapter = require('./adapters/' + config.adapter);
         var adapter = Adapter(config, LOGGER);
 
-        var args = process.argv.slice(2);
+        if (!command) {
+            const args = process.argv.slice(-2);
+            command = args[0] == 'create' ? 'create' : args[1];
+            param = args[1];
+        }
 
-        switch (args[0]) {
+        switch (command) {
             case 'create':
-                createMigrationCommand(config, LOGGER, args[1]);
+                create(config, param);
                 break;
             case 'migrate':
                 migrate(config, adapter).then(onCliSuccess, onCliError);
@@ -54,6 +63,7 @@ module.exports = {
                 rollback(config, adapter).then(onCliSuccess, onCliError);
                 break;
             default:
+                LOGGER.log(`unknown command: ${command}`);
                 LOGGER.log('exit');
         }
 
