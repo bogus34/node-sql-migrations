@@ -23,4 +23,6 @@ module.exports = function (config, logger, migrationName) {
 
     fs.openSync(up, 'w');
     fs.openSync(down, 'w');
+
+    return Promise.resolve();
 };
