@@ -31,7 +31,7 @@ function rollback(config, adapter) {
 }
 
 function create(config, name) {
-    createMigrationCommand(config, LOGGER, name);
+    return createMigrationCommand(config, LOGGER, name);
 }
 
 async function ls(config, adapter) {
